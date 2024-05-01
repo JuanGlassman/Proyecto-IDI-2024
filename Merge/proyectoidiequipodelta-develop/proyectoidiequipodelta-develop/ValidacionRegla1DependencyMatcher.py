@@ -5,97 +5,111 @@ from spacy.matcher import DependencyMatcher
 from spacy import displacy
 
 # Cargar el modelo para español
-nlp = spacy.load("es_core_news_lg")
+nlp = spacy.load("es_core_news_sm")
 
 # Verificar si un verbo es negativo si arranca en algun prefijo negativo
-def is_negative_verb(verb):
-    negative_pref = ["in", "im", "des", "anti", "dis"]
-    return any(verb.startswith(pref) for pref in negative_pref)
+def verificarNegativismo1(verbo):
+    prefijos_negativos = ["in", "im", "de", "a", "anti", "dis"]
+    for prefijo in prefijos_negativos:
+        if verbo.startswith(prefijo):
+            return True
+    return False
 
 # Verificar si un verbo es negativo si arranca en algun prefijo negativo
-def has_negative_adv(sentence):    
-    negative_adv = ["no", "nunca", "jamás", "nada", "ni", "tampoco"]
-    sentences = split_sentences(sentence)
-    # Verificar negación en la primer oración: Ej: El gato no ama la comida, debe ser porque no es de pescado. 
-    words = sentences[0].lower().split()
-    return any(adv in words for adv in negative_adv)
+def verificarNegativismo2(oracion):    
+    adverbio_negativo = ["no", "nunca", "jamas", "nada", "ni", "tampoco"]
+    oracion = oracion.lower()
+    for prefijo in adverbio_negativo:
+        if prefijo in oracion.split():
+            return True
+    return False
+
+
+# buscar patrón pasado por parametro en el documento "doc" y agregar correspondiente si es negativa o positiva al vector
+def buscarPatron (patron, doc, oracion_positiva, oracion_negativa, negativa2):
+    # Crear el matcher
+    matcher = DependencyMatcher(nlp.vocab)
+
+    # Agregar el patrón al matcher
+    matcher.add("PATRON:",[patron])
+
+    # Encontrar coincidencias con el matcher
+    coincidencias = matcher(doc)
+
+    # Imprimir Vector creado por el matcher
+    for match_id, token_ids in coincidencias:
+        palabra = []
+        negativa1 = False
+
+        for token_id in sorted(token_ids):
+            token = doc[token_id]
+
+            if ((token.dep_ == "ROOT") and (token.pos_ in {"VERB", "PROPN", "NOUN"})):
+                if verificarNegativismo1(token.text):
+                    negativa1 = True
+            palabra.append(token.text)
+        
+        # Convertir lista de palabras en oración y añadir a la lista de oraciones
+        oracion = ' '.join(palabra)
+       
+       # XOR
+        if (negativa1 or negativa2) and not(negativa1 and negativa2):
+            oracion_negativa.append(oracion)
+        else:
+            oracion_positiva.append(oracion)
+
+    return oracion_positiva, oracion_negativa
 
 
 # Definir patrones     
-def define_pattern():
-    root_verb = {'RIGHT_ID': 'Verbo_id', 
+def definirPatron():
+
+    verboRaiz = {'RIGHT_ID': 'Verbo_id', 
     'RIGHT_ATTRS': {"POS": {"IN": ["PROPN", "NOUN", "VERB"]}, "DEP": "ROOT"}}
 
-    subject = {'LEFT_ID': 'Verbo_id', 
+    sujeto = {'LEFT_ID': 'Verbo_id', 
     'REL_OP': '>', 
     'RIGHT_ID': 'Sujeto_id', 
     'RIGHT_ATTRS': {"DEP":{"IN": ["nsubj", "det"]}}}
 
-    object = {'LEFT_ID': 'Verbo_id', 
+    objeto = {'LEFT_ID': 'Verbo_id', 
     'REL_OP': '>', 
     'RIGHT_ID': 'Objeto1_id', 
     'RIGHT_ATTRS': {"DEP":{"IN": ["obl","iobj", "obj"]}}}
 
-    return [root_verb, subject, object]
+    return [verboRaiz, sujeto, objeto]
 
 
-# Separar oraciones
-def split_sentences(text):
-    # Lista de delimitadores para reemplazar por punto y coma
-    delimiters = ['.', ',', ' y ', ' e ', ' o ']
+#refactorizar
+def separarOraciones(texto):
+    # Reemplazar todos los puntos, las comas y las "y" por puntos y comas para tener un único delimitador
+    texto_unificado = texto.replace('.', ';').replace(',', ';').replace(' y ', ' ; ').replace(' e ', ' ; ').replace(' o ', ' ; ')
 
-    # Reemplazar todos los delimitadores por punto y coma usando un bucle for
-    for delimiter in delimiters:
-        text = text.replace(delimiter, ';')
+    # Dividir el texto en oraciones usando punto y coma como delimitador
+    oraciones_brutas = texto_unificado.split(';')
 
     # Limpiar espacios en blanco alrededor de las oraciones y eliminar cualquier oración vacía
-    sentences = [sentence.strip() for sentence in text.split(';') if sentence.strip()]
+    oraciones = [oracion.strip() for oracion in oraciones_brutas if oracion.strip()]
 
-    return sentences
-
-# Buscar patrón en text con el matcher que se pasa por parametro con el patron cargado 
-def find_pattern (matcher, text):
-    doc = nlp(text)
-    matches = matcher(doc)
-    results = []
-
-    for match_id, token_ids in matches:
-        # Formar nuevamente la oración para retornarla y para verificar "has negative adverb"
-        sentence_text = doc[token_ids[0]].sent.text
-        
-        is_negative_adv = has_negative_adv(sentence_text)
-        is_negative = False
-
-        for token_id in token_ids:
-                token = doc[token_id]
-                if ((token.dep_ == "ROOT") and (token.pos_ in {"VERB", "PROPN", "NOUN"})):
-                    is_negative = is_negative_verb(token.lemma_)
-
-        #XOR
-        is_negative = ((is_negative or is_negative_adv) and not(is_negative and is_negative_adv))
-            
-        results.append((sentence_text, is_negative))
-
-    return results
+    return oraciones
 
 
+          
+# Texto de ejemplo// 1 sola oracion (usar adverbios)
+texto = """La cuenta corriente nunca deposito mi saldo."""
 
-matcher = DependencyMatcher(nlp.vocab)
-matcher.add("PATRON: ",[define_pattern()])
+doc = nlp(texto)
 
-text = """La gazela vuela por la laguna como nunca""" #PROBLEMA con el "como nunca"
+oraciones = separarOraciones(texto)
 
-#sentences = split_sentences(text)
+# Lista para guardar oraciones que cumplen el patrón
+oraciones_positivas = []
+oraciones_negativas = []
 
-positive_sentence = []
-negative_sentence = []
+for oracion in oraciones:
+    # Procesar el texto con spaCy
+    doc = nlp(oracion)
 
-indices = find_pattern(matcher, text)
+    oraciones_positivas, oraciones_negativas = buscarPatron(definirPatron(), doc, oraciones_positivas, oraciones_negativas, verificarNegativismo2(oracion))
 
-for text, is_negative in indices:   
-    if (is_negative):
-        negative_sentence.append(text)
-    else:
-        positive_sentence.append(text)
-
-print("Positivas: ", positive_sentence, ", Negativas: ", negative_sentence)
+print("Positivas: ", oraciones_positivas, ", Negativas: ", oraciones_negativas)

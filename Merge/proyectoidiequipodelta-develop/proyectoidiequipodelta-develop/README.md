@@ -61,11 +61,11 @@ simples comparaciones léxicas, incorporando semántica, contexto léxico y ajus
 en el uso lingüístico específico.
 
 
-**Ejemplo**
+**Informe**
 
-Notar que ambas frases están escritas de forma muy distinta, pero significan casi
-lo mismo. Eso se ve reflejado en que la similitud de cómo están orquestadas es medianamente
-similiar, ahora la similitud estructural, o sea la semántica es casi idéntica.
+Una vez hecha las comparaciones entre texto, se puede proceder a generar un informe
+en pdf.
 
-![Ejemplo](/images/ejemplo.png)
+![Infrorme](/images/informe.png)
+
 

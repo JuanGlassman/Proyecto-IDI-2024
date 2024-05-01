@@ -4,20 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text Comparison Tool</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Nunito', sans-serif;
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
-            color: #202040;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            color: #ffffff;
             text-align: center;
             margin: 0;
             padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         h1 {
-            color: #fff;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            color: #E0E0E0;
+            margin: 0 auto 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
         #textForm {
             display: flex;
@@ -25,47 +30,46 @@
             gap: 20px;
             flex-wrap: wrap;
             margin-top: 20px;
+            width: 60%;
         }
         textarea {
-            width: calc(50% - 40px);
-            min-width: 300px;
-            height: 200px;
-            border: none;
+            width: 100%;
+            height: 150px;
+            border: 2px solid #555;
             border-radius: 12px;
             padding: 15px;
             font-size: 16px;
-            color: #202040;
-            background: rgba(255, 255, 255, 0.8);
+            color: #DDD;
+            background: #333333;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             resize: vertical;
         }
         button {
-            background-color: #56ab2f;
-            background-image: linear-gradient(to right, #a8e063, #56ab2f);
+            background-color: #8A2BE2; /* Strong violet color */
             color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
+            border: 2px solid #8A2BE2; /* Border color set to match the background */
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
-            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(138, 43, 226, 0.4);
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out, transform 0.2s ease;
+            margin-top: 20px; /* Adds spacing between the text areas and the button */
         }
         button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(86, 171, 47, 0.6);
+            background-color: #9932CC; /* Darker violet on hover */
+            box-shadow: 0 8px 16px rgba(138, 43, 226, 0.6);
+            transform: translateY(-2px);
         }
         #result {
             margin-top: 30px;
-            background: white;
+            background: rgba(51, 51, 51, 0.9);
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            width: 80%;
-            margin-left: auto;
-            margin-right: auto;
-            color: #202040;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 60%;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -75,9 +79,10 @@
         <textarea name="text1" placeholder="Enter first text here..."></textarea>
         <textarea name="text2" placeholder="Enter second text here..."></textarea>
     </form>
-    <button onclick="submitTexts()">Compare</button>
+    <button onclick="submitTexts()" >Comparar</button>
     <div id="result"></div>
-
+    <button id="downloadButton" onclick="downloadPDF()" disabled>Descargar PDF</button>
+    
     <script>
         function submitTexts() {
             var form = document.getElementById('textForm');
@@ -88,14 +93,31 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerHTML = '<p>Similarity: ' + data.similarity + '</p>' +
-                    '<p>Structural_similarity: ' + JSON.stringify(data.structural_similarity) + '</p>' +
-                    '<p>Word_similarity: ' + JSON.stringify(data.word_similarity) + '</p>' +
-                    '<p>Details Difference: ' + JSON.stringify(data.details_difference) + '</p>' +
-                    '<p>Negations in Text 1: ' + JSON.stringify(data.negations_text1) + '</p>' +
-                    '<p>Negations in Text 2: ' + JSON.stringify(data.negations_text2) + '</p>';
+                document.getElementById('result').innerHTML = 
+                    '<p>Similaridad estructural: ' + data.similarity.toFixed(2) + '</p>' +
+                    '<p>Similaridad semántica: ' + data.structural_similarity.toFixed(2) + '</p>' +
+                    '<p>Similaridad en palabras: ' + data.word_similarity.toFixed(2) + '</p>' ;
+                
+        
+                // Guarda la URL para la descarga del PDF
+                if (data.pdf_url) {
+                    pdfUrl = data.pdf_url;
+                    document.getElementById('downloadButton').disabled = false;
+                }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                // Deshabilita el botón si hay un error
+                document.getElementById('downloadButton').disabled = true;
+            });
+        }
+        
+        function downloadPDF() {
+            if (pdfUrl) {
+                window.location.href = pdfUrl;
+            } else {
+                alert('Primero debe realizar una comparación.');
+            }
         }
     </script>
 </body>

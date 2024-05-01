@@ -1,0 +1,44 @@
+{
+    "colors": {
+      "gris": ["gris", "plomizo"],
+      "celeste": ["celeste", "azul claro"],
+      "azulada": ["azulada", "azulino", "azul"],
+      "rojo": ["rojo", "carmesí"],
+      "verde": ["verde", "esmeralda"],
+      "amarillo": ["amarillo", "dorado"],
+      "blanco": ["blanco", "albo"],
+      "negro": ["negro", "obsidiana"]
+    },
+    "physical_attributes": {
+      "alto": ["alto", "elevado"],
+      "bajo": ["bajo", "corto"],
+      "delgado": ["delgado", "esbelto"],
+      "gordo": ["gordo", "obeso"],
+      "fuerte": ["fuerte", "robusto"],
+      "débil": ["débil", "frágil"],
+      "hermoso": ["hermosa", "bella"],
+      "feo": ["feo", "horrible"]
+    },
+    "emotions": {
+      "feliz": ["feliz", "alegre", "contento"],
+      "triste": ["triste", "melancólico"],
+      "enojado": ["enojado", "iracundo"],
+      "asustado": ["asustado", "atemorizado"],
+      "sorprendido": ["sorprendido", "asombrado"],
+      "cansado": ["cansado", "fatigado"],
+      "tranquilo": ["tranquilo", "sereno", "calmo"],
+      "nervioso": ["nervioso", "ansioso"]
+    },
+    "verbs": {
+      "hablar": ["hablar", "conversar", "charlar"],
+      "comer": ["comer", "ingerir", "devorar"],
+      "andar": ["andar", "caminar", "pasear"],
+      "ver": ["ver", "observar", "mirar"],
+      "pensar": ["pensar", "reflexionar", "considerar"],
+      "saltar":["saltar", "brincar"]
+    },
+    "events": {
+      "riesgo": ["riesgo", "riesgos", "amenaza"]
+    }
+  }
+  
